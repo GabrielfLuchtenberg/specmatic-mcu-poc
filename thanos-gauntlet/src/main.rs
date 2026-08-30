@@ -22,6 +22,7 @@ struct TargetReport {
     alias: String,
     power_level: i32,
     infinity_stone_status: String,
+    stone_secured: bool,
     snap_viable: bool,
 }
 
@@ -55,12 +56,14 @@ async fn assess_target(
 ) -> impl IntoResponse {
     match state.client.get_hero(id).await {
         Ok(hero) => {
+            let stone_secured = hero.infinity_stone_status == "SECURED";
             let report = TargetReport {
                 snap_viable: hero.power_level < 100 && hero.infinity_stone_status != "COMPROMISED",
                 hero_id: hero.id,
                 alias: hero.alias,
                 power_level: hero.power_level,
                 infinity_stone_status: hero.infinity_stone_status,
+                stone_secured,
             };
             (StatusCode::OK, Json(report)).into_response()
         }
