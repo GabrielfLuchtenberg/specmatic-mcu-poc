@@ -42,7 +42,7 @@ paths:
                     id: 1
                     name: Tony Stark
                     alias: Iron Man
-                    powerLevel: 95
+                    strength: 95
                     infinityStoneStatus: SECURED
                     location: Avengers Tower
                 THOR_200_OK:
@@ -50,7 +50,7 @@ paths:
                     id: 2
                     name: Thor Odinson
                     alias: God of Thunder
-                    powerLevel: 99
+                    strength: 99
                     infinityStoneStatus: SECURED
                     location: New Asgard
         "404":
@@ -70,7 +70,7 @@ components:
     Hero:
       type: object
       additionalProperties: false
-      required: [id, name, alias, powerLevel, infinityStoneStatus]
+      required: [id, name, alias, strength, infinityStoneStatus]
       properties:
         id:
           type: integer
@@ -79,11 +79,11 @@ components:
           type: string
         alias:
           type: string
-        powerLevel:
+        strength:
           type: integer
           minimum: 0
           maximum: 100
-          description: SHIELD-rated combat power. Renaming this field is a breaking change.
+          description: SHIELD-rated combat power. This renamed field intentionally breaks compatibility.
         infinityStoneStatus:
           $ref: "#/components/schemas/InfinityStoneStatus"
         location:
