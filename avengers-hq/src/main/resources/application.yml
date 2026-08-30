@@ -1,0 +1,15 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: avengers-hq
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,mappings
+  endpoint:
+    health:
+      show-details: never

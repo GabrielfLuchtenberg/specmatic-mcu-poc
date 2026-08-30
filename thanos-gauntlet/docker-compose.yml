@@ -1,0 +1,9 @@
+services:
+  specmatic-mock:
+    image: specmatic/specmatic
+    command: ["mock", "/workspace/contracts/heroes.yaml", "--port", "9000"]
+    ports:
+      - "9000:9000"
+    volumes:
+      - ../:/workspace
+    working_dir: /workspace

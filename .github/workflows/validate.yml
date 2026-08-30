@@ -1,0 +1,55 @@
+name: Validate executable contract
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  provider-contract:
+    name: Provider honours OpenAPI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+      - name: Run Spring Boot and Specmatic provider tests
+        run: ./avengers-hq/scripts/test-contract.sh
+
+  consumer-contract:
+    name: Consumer works against Specmatic mock
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Run unit tests
+        working-directory: thanos-gauntlet
+        run: cargo test
+      - name: Run consumer integration tests against the OpenAPI mock
+        working-directory: thanos-gauntlet
+        run: ./scripts/test-against-mock.sh
+
+  contract-compatibility:
+    name: Contract remains backward compatible
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fail a breaking OpenAPI change
+        run: >-
+          docker run --rm
+          -v "$GITHUB_WORKSPACE:/workspace"
+          -w /workspace
+          specmatic/specmatic
+          backward-compatibility-check
+          --base-branch origin/${{ github.base_ref }}
+          --target-path contracts
