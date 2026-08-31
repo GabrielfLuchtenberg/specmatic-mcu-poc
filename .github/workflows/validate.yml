@@ -52,5 +52,5 @@ jobs:
           -w /workspace
           specmatic/specmatic
           backward-compatibility-check
-          --base-branch HEAD^1
+          --base-branch ${{ github.event.pull_request.base.sha }}
           --target-path contracts
