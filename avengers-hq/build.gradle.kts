@@ -36,6 +36,9 @@ tasks.register<JavaExec>("generateOpenApi") {
     dependsOn(tasks.testClasses)
     classpath = sourceSets.test.get().runtimeClasspath
     mainClass.set("io.avengers.hq.GenerateOpenApiKt")
+    javaLauncher.set(javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(21))
+    })
     args(providers.gradleProperty("openApiOutput").orElse("../build/generated-contracts/heroes.yaml").get())
 }
 

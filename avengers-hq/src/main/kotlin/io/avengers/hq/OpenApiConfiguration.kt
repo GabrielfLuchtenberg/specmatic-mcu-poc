@@ -28,12 +28,19 @@ class OpenApiConfiguration {
     @Bean
     fun specmaticExamples(): OpenApiCustomizer = OpenApiCustomizer { api ->
         val operation = api.paths["/heroes/{id}"]!!.get
+        operation.tags = null
         val parameterExamples = linkedMapOf(
             "IRON_MAN_200_OK" to Example().value(1),
             "THOR_200_OK" to Example().value(2),
             "UNKNOWN_HERO_404" to Example().value(666),
         )
-        operation.parameters.single { it.name == "id" }.examples = parameterExamples
+        operation.parameters.single { it.name == "id" }.apply {
+            description = null
+            example = null
+            examples = parameterExamples
+        }
+        api.components.schemas["Hero"]!!.properties["powerLevel"]!!.format = null
+        api.components.schemas["Error"]!!.properties["status"]!!.format = null
         operation.responses["200"]!!.content["application/json"]!!.examples = linkedMapOf(
             "IRON_MAN_200_OK" to Example().value(linkedMapOf("id" to 1, "name" to "Tony Stark", "alias" to "Iron Man", "powerLevel" to 95, "infinityStoneStatus" to "SECURED", "location" to "Avengers Tower")),
             "THOR_200_OK" to Example().value(linkedMapOf("id" to 2, "name" to "Thor Odinson", "alias" to "God of Thunder", "powerLevel" to 99, "infinityStoneStatus" to "SECURED", "location" to "New Asgard")),

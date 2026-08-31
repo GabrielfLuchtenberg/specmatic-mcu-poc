@@ -1,5 +1,5 @@
 ---
-openapi: "3.1.0"
+openapi: "3.0.3"
 info:
   title: "Avengers HQ Superhero Registry"
   description: "Executable contract shared by Avengers HQ (provider) and Thanos Gauntlet\n\
@@ -12,19 +12,16 @@ servers:
 paths:
   /heroes/{id}:
     get:
-      tags:
-      - "hero-controller"
       summary: "Retrieve a registered Avenger by id"
       operationId: "getHeroById"
       parameters:
       - name: "id"
         in: "path"
-        description: "Registered hero id"
         required: true
         schema:
+          minimum: 1
           type: "integer"
           format: "int64"
-          minimum: 1
         examples:
           IRON_MAN_200_OK:
             value: 1
@@ -32,7 +29,6 @@ paths:
             value: 2
           UNKNOWN_HERO_404:
             value: 666
-        example: 1
       responses:
         "200":
           description: "Hero found in the registry"
@@ -72,8 +68,13 @@ paths:
 components:
   schemas:
     Hero:
+      required:
+      - "alias"
+      - "id"
+      - "infinityStoneStatus"
+      - "name"
+      - "powerLevel"
       type: "object"
-      additionalProperties: false
       properties:
         id:
           type: "integer"
@@ -83,23 +84,17 @@ components:
         alias:
           type: "string"
         powerLevel:
-          type: "integer"
-          format: "int32"
-          description: "SHIELD-rated combat power. Renaming this field is a breaking\
-            \ change."
           maximum: 100
           minimum: 0
+          type: "integer"
+          description: "SHIELD-rated combat power. Renaming this field is a breaking\
+            \ change."
         infinityStoneStatus:
           $ref: "#/components/schemas/InfinityStoneStatus"
         location:
           type: "string"
           description: "Optional last-known location."
-      required:
-      - "alias"
-      - "id"
-      - "infinityStoneStatus"
-      - "name"
-      - "powerLevel"
+      additionalProperties: false
     InfinityStoneStatus:
       type: "string"
       enum:
@@ -107,16 +102,15 @@ components:
       - "MISSING"
       - "COMPROMISED"
     Error:
+      required:
+      - "message"
+      - "status"
       type: "object"
-      additionalProperties: false
       properties:
         status:
           type: "integer"
-          format: "int32"
         message:
           type: "string"
         path:
           type: "string"
-      required:
-      - "message"
-      - "status"
+      additionalProperties: false

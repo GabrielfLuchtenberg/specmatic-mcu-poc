@@ -17,7 +17,7 @@ data class Hero(
     @field:Schema(description = "SHIELD-rated combat power. Renaming this field is a breaking change.", minimum = "0", maximum = "100")
     val powerLevel: Int,
     val infinityStoneStatus: InfinityStoneStatus,
-    @field:Schema(description = "Optional last-known location.", nullable = true)
+    @field:Schema(description = "Optional last-known location.")
     val location: String? = null,
 )
 
