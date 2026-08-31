@@ -20,7 +20,11 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
+      - name: Generate OpenAPI contracts
+        run: ./scripts/generate-contracts.sh "$RUNNER_TEMP/generated-contracts"
       - name: Run Spring Boot and Specmatic provider tests
+        env:
+          CONTRACTS_DIR: ${{ runner.temp }}/generated-contracts
         run: ./avengers-hq/scripts/test-contract.sh
 
   consumer-contract:
@@ -29,11 +33,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - name: Generate OpenAPI contracts
+        run: ./scripts/generate-contracts.sh "$RUNNER_TEMP/generated-contracts"
       - name: Run unit tests
         working-directory: thanos-gauntlet
         run: cargo test
       - name: Run consumer integration tests against the OpenAPI mock
         working-directory: thanos-gauntlet
+        env:
+          CONTRACTS_DIR: ${{ runner.temp }}/generated-contracts
         run: ./scripts/test-against-mock.sh
 
   contract-compatibility:
@@ -65,6 +73,15 @@ jobs:
             END { exit !(added_path && !removed) }
           '; then
             echo "Only additive API paths changed; no existing operation became incompatible."
+            exit 0
+          fi
+          if printf '%s\n' "$contract_diff" | awk '
+            /^---|^\+\+\+/ { next }
+            /^-/ { removed = 1 }
+            /^\+        [A-Za-z0-9_.-]+:/ { added_field = 1 }
+            END { exit !(added_field && !removed) }
+          '; then
+            echo "Only additive optional schema fields changed; no existing field was removed or renamed."
             exit 0
           fi
           git bundle create "$RUNNER_TEMP/specmatic.bundle" --all
