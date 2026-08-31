@@ -1,0 +1,60 @@
+openapi: 3.1.0
+info:
+  title: Thanos Gauntlet Target Assessment
+  description: Consumer of the Avengers HQ superhero registry — MCU-themed Specmatic demo
+  license:
+    name: ''
+  version: 1.0.0
+paths:
+  /targets/{id}:
+    get:
+      tags: []
+      operationId: assessTarget
+      parameters:
+      - name: id
+        in: path
+        description: Hero id to assess
+        required: true
+        schema:
+          type: integer
+          format: int64
+          minimum: 0
+      responses:
+        '200':
+          description: Target assessment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TargetReport'
+        '404':
+          description: Hero was not found
+        '502':
+          description: Avengers HQ was unreachable or returned an incompatible response
+          content:
+            text/plain:
+              schema:
+                type: string
+components:
+  schemas:
+    TargetReport:
+      type: object
+      required:
+      - heroId
+      - alias
+      - powerLevel
+      - infinityStoneStatus
+      - snapViable
+      properties:
+        alias:
+          type: string
+        heroId:
+          type: integer
+          format: int64
+          minimum: 0
+        infinityStoneStatus:
+          type: string
+        powerLevel:
+          type: integer
+          format: int32
+        snapViable:
+          type: boolean

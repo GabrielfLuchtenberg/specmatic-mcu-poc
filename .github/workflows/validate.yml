@@ -86,6 +86,12 @@ jobs:
           fi
           git bundle create "$RUNNER_TEMP/specmatic.bundle" --all
           for file in $existing_contracts; do
+            baseline="$RUNNER_TEMP/$(basename "$file").base.yaml"
+            git show "$base:$file" > "$baseline"
+            if ruby -ryaml -e 'exit(YAML.load_file(ARGV[0]) == YAML.load_file(ARGV[1]) ? 0 : 1)' "$baseline" "$file"; then
+              echo "$file only changed formatting; its OpenAPI semantics are unchanged."
+              continue
+            fi
             docker run --rm \
               -v "$GITHUB_WORKSPACE:/workspace:ro" \
               -v "$RUNNER_TEMP/specmatic.bundle:/specmatic.bundle:ro" \

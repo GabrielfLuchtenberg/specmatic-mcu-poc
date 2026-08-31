@@ -1,37 +1,37 @@
-openapi: 3.0.3
+---
+openapi: "3.0.3"
 info:
-  title: Avengers HQ Superhero Registry
-  description: |
-    Executable contract shared by Avengers HQ (provider) and Thanos Gauntlet
-    (consumer). Specmatic uses it both to test the real provider and to run a
-    mock that the consumer tests call.
+  title: "Avengers HQ Superhero Registry"
+  description: "Executable contract shared by Avengers HQ (provider) and Thanos Gauntlet\n\
+    (consumer). Specmatic uses it both to test the real provider and to run a\nmock\
+    \ that the consumer tests call.\n"
   version: "1.0.0"
 servers:
-  - url: http://localhost:8080
-    description: Local Avengers HQ
+- url: "http://localhost:8080"
+  description: "Local Avengers HQ"
 paths:
   /heroes/{id}:
     get:
-      operationId: getHeroById
-      summary: Retrieve a registered Avenger by id
+      summary: "Retrieve a registered Avenger by id"
+      operationId: "getHeroById"
       parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-            minimum: 1
-          examples:
-            IRON_MAN_200_OK:
-              value: 1
-            THOR_200_OK:
-              value: 2
-            UNKNOWN_HERO_404:
-              value: 666
+      - name: "id"
+        in: "path"
+        required: true
+        schema:
+          minimum: 1
+          type: "integer"
+          format: "int64"
+        examples:
+          IRON_MAN_200_OK:
+            value: 1
+          THOR_200_OK:
+            value: 2
+          UNKNOWN_HERO_404:
+            value: 666
       responses:
         "200":
-          description: Hero found in the registry
+          description: "Hero found in the registry"
           content:
             application/json:
               schema:
@@ -40,21 +40,21 @@ paths:
                 IRON_MAN_200_OK:
                   value:
                     id: 1
-                    name: Tony Stark
-                    alias: Iron Man
+                    name: "Tony Stark"
+                    alias: "Iron Man"
                     powerLevel: 95
-                    infinityStoneStatus: SECURED
-                    location: Avengers Tower
+                    infinityStoneStatus: "SECURED"
+                    location: "Avengers Tower"
                 THOR_200_OK:
                   value:
                     id: 2
-                    name: Thor Odinson
-                    alias: God of Thunder
+                    name: "Thor Odinson"
+                    alias: "God of Thunder"
                     powerLevel: 99
-                    infinityStoneStatus: SECURED
-                    location: New Asgard
+                    infinityStoneStatus: "SECURED"
+                    location: "New Asgard"
         "404":
-          description: Hero not found — perhaps dusted, or never assembled
+          description: "Hero not found — perhaps dusted, or never assembled"
           content:
             application/json:
               schema:
@@ -63,43 +63,54 @@ paths:
                 UNKNOWN_HERO_404:
                   value:
                     status: 404
-                    message: Hero not found
-                    path: /heroes/666
+                    message: "Hero not found"
+                    path: "/heroes/666"
 components:
   schemas:
     Hero:
-      type: object
-      additionalProperties: false
-      required: [id, name, alias, powerLevel, infinityStoneStatus]
+      required:
+      - "id"
+      - "name"
+      - "alias"
+      - "powerLevel"
+      - "infinityStoneStatus"
+      type: "object"
       properties:
         id:
-          type: integer
-          format: int64
+          type: "integer"
+          format: "int64"
         name:
-          type: string
+          type: "string"
         alias:
-          type: string
+          type: "string"
         powerLevel:
-          type: integer
-          minimum: 0
           maximum: 100
-          description: SHIELD-rated combat power. Renaming this field is a breaking change.
+          minimum: 0
+          type: "integer"
+          description: "SHIELD-rated combat power. Renaming this field is a breaking\
+            \ change."
         infinityStoneStatus:
           $ref: "#/components/schemas/InfinityStoneStatus"
         location:
-          type: string
-          description: Optional last-known location.
-    InfinityStoneStatus:
-      type: string
-      enum: [SECURED, MISSING, COMPROMISED]
-    Error:
-      type: object
+          type: "string"
+          description: "Optional last-known location."
       additionalProperties: false
-      required: [status, message]
+    InfinityStoneStatus:
+      type: "string"
+      enum:
+      - "SECURED"
+      - "MISSING"
+      - "COMPROMISED"
+    Error:
+      required:
+      - "status"
+      - "message"
+      type: "object"
       properties:
         status:
-          type: integer
+          type: "integer"
         message:
-          type: string
+          type: "string"
         path:
-          type: string
+          type: "string"
+      additionalProperties: false
