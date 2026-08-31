@@ -12,4 +12,8 @@ class HeroRegistry {
     ).associateBy { it.id }
 
     fun findById(id: Long): Hero? = heroes[id]
+
+    fun powerReport(id: Long): PowerReport? = findById(id)?.let { hero ->
+        PowerReport(hero.id, hero.alias, hero.powerLevel, hero.powerLevel < 100 && hero.infinityStoneStatus != InfinityStoneStatus.COMPROMISED)
+    }
 }
