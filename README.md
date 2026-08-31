@@ -63,7 +63,7 @@ After the repository is on GitHub, mark these three checks as required in the `m
 
 ## Suggested demonstration pull requests
 
-- `example/provider-add-hulk`: provider-only change that adds Hero id 5, then adds the corresponding named contract example. This demonstrates that implementation and contract evolve together.
+- `example/provider-add-hulk`: provider-only change that adds Hero id 5 while leaving the contract unchanged. This demonstrates that additive implementation work remains safe until a contract example is intentionally added.
 - `example/consumer-snap-report`: consumer-only change that adds a report field derived from existing contract data. This demonstrates an independent consumer change while all contract checks stay green.
 - `example/breaking-power-level-rename`: intentionally rename `powerLevel` in the contract to show the compatibility gate failing. Do not merge it; it is a teaching PR.
 
