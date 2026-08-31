@@ -45,7 +45,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Fetch the pull request base branch
-        run: git fetch origin "${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
+        run: git fetch origin "${{ github.base_ref }}:refs/heads/${{ github.base_ref }}"
       - name: Fail a breaking OpenAPI change
         run: >-
           docker run --rm
@@ -53,5 +53,5 @@ jobs:
           -w /workspace
           specmatic/specmatic
           backward-compatibility-check
-          --base-branch origin/${{ github.base_ref }}
+          --base-branch ${{ github.base_ref }}
           --target-path contracts
