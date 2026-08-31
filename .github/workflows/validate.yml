@@ -58,9 +58,11 @@ jobs:
             exit 0
           fi
           git bundle create "$RUNNER_TEMP/specmatic.bundle" --all
-          docker run --rm \
-            -v "$GITHUB_WORKSPACE:/workspace:ro" \
-            -v "$RUNNER_TEMP/specmatic.bundle:/specmatic.bundle:ro" \
-            --entrypoint /bin/sh \
-            specmatic/specmatic \
-            -c "git clone /specmatic.bundle /repo >/dev/null && cd /repo && specmatic backward-compatibility-check --base-branch ${{ github.event.pull_request.base.sha }} --target-path contracts"
+          for file in $existing_contracts; do
+            docker run --rm \
+              -v "$GITHUB_WORKSPACE:/workspace:ro" \
+              -v "$RUNNER_TEMP/specmatic.bundle:/specmatic.bundle:ro" \
+              --entrypoint /bin/sh \
+              specmatic/specmatic \
+              -c "git clone /specmatic.bundle /repo >/dev/null && cd /repo && specmatic backward-compatibility-check --base-branch ${{ github.event.pull_request.base.sha }} --target-path $file"
+          done
