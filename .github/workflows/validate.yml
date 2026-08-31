@@ -48,6 +48,7 @@ jobs:
         run: >-
           docker run --rm
           -v "$GITHUB_WORKSPACE:/workspace"
+          -v "$GITHUB_WORKSPACE/.git:/workspace/.git:ro"
           -w /workspace
           specmatic/specmatic
           backward-compatibility-check
