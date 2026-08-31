@@ -17,10 +17,11 @@ cleanup() {
 trap cleanup EXIT
 
 GRADLE_USER_HOME="${GRADLE_USER_HOME:-$APP_ROOT/.gradle}" \
-  ./gradlew bootRun --no-daemon >"$APP_ROOT/build/specmatic-provider.log" 2>&1 &
+  ./gradlew bootJar --no-daemon
+java -jar "$APP_ROOT/build/libs/avengers-hq-1.0.0.jar" >"$APP_ROOT/build/specmatic-provider.log" 2>&1 &
 APP_PID=$!
 
-for _ in $(seq 1 60); do
+for _ in $(seq 1 90); do
   if curl --fail --silent http://localhost:8080/actuator/health >/dev/null; then
     docker run --rm \
       --add-host=host.docker.internal:host-gateway \
