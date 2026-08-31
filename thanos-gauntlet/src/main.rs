@@ -5,24 +5,15 @@ use axum::{
     routing::get,
     Json, Router,
 };
-use serde::Serialize;
 use std::net::SocketAddr;
 use thanos_gauntlet::{AvengersClient, GauntletError};
+use thanos_gauntlet::provider_openapi::TargetReport;
 use tower_http::trace::TraceLayer;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 #[derive(Clone)]
 struct AppState {
     client: AvengersClient,
-}
-
-#[derive(Serialize)]
-struct TargetReport {
-    hero_id: u64,
-    alias: String,
-    power_level: i32,
-    infinity_stone_status: String,
-    snap_viable: bool,
 }
 
 #[tokio::main]

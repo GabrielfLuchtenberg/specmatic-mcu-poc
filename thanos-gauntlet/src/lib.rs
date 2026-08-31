@@ -2,6 +2,43 @@ use reqwest::StatusCode;
 use serde::Deserialize;
 use thiserror::Error;
 
+pub mod provider_openapi {
+    use serde::Serialize;
+    use utoipa::{OpenApi, ToSchema};
+
+    #[derive(Debug, Serialize, ToSchema)]
+    #[serde(rename_all = "camelCase")]
+    pub struct TargetReport {
+        pub hero_id: u64,
+        pub alias: String,
+        pub power_level: i32,
+        pub infinity_stone_status: String,
+        pub snap_viable: bool,
+    }
+
+    #[utoipa::path(
+        get,
+        path = "/targets/{id}",
+        operation_id = "assessTarget",
+        params(("id" = u64, Path, minimum = 0, description = "Hero id to assess")),
+        responses(
+            (status = 200, description = "Target assessment", body = TargetReport),
+            (status = 404, description = "Hero was not found"),
+            (status = 502, description = "Avengers HQ was unreachable or returned an incompatible response", body = String)
+        )
+    )]
+    #[allow(dead_code)]
+    fn assess_target_contract() {}
+
+    #[derive(OpenApi)]
+    #[openapi(
+        info(title = "Thanos Gauntlet Target Assessment", version = "1.0.0"),
+        paths(assess_target_contract),
+        components(schemas(TargetReport))
+    )]
+    pub struct ProviderApi;
+}
+
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct Hero {
