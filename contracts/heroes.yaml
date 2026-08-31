@@ -4,7 +4,7 @@ info:
   title: "Avengers HQ Superhero Registry"
   description: "Executable contract shared by Avengers HQ (provider) and Thanos Gauntlet\n\
     (consumer). Specmatic uses it both to test the real provider and to run a\nmock\
-    \ that the consumer tests call."
+    \ that the consumer tests call.\n"
   version: "1.0.0"
 servers:
 - url: "http://localhost:8080"
@@ -69,11 +69,11 @@ components:
   schemas:
     Hero:
       required:
-      - "alias"
       - "id"
-      - "infinityStoneStatus"
       - "name"
+      - "alias"
       - "powerLevel"
+      - "infinityStoneStatus"
       type: "object"
       properties:
         id:
@@ -103,8 +103,8 @@ components:
       - "COMPROMISED"
     Error:
       required:
-      - "message"
       - "status"
+      - "message"
       type: "object"
       properties:
         status:

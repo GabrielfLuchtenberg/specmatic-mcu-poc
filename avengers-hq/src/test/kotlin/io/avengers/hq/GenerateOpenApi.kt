@@ -24,6 +24,10 @@ fun main(args: Array<String>) {
         val json = RestClient.create().get().uri("http://127.0.0.1:$port/v3/api-docs").retrieve().body(String::class.java)!!
         val tree = ObjectMapper().readTree(json) as ObjectNode
         tree.put("openapi", "3.0.3")
+        val schemas = tree.withObject("/components/schemas")
+        schemas.withObject("/Hero").putArray("required")
+            .add("id").add("name").add("alias").add("powerLevel").add("infinityStoneStatus")
+        schemas.withObject("/Error").putArray("required").add("status").add("message")
         val yaml = ObjectMapper(YAMLFactory())
             .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
             .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
