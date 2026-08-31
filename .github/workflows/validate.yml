@@ -57,6 +57,16 @@ jobs:
             echo "Only new contract files were added; no backward-compatibility baseline exists."
             exit 0
           fi
+          contract_diff="$(git diff --unified=0 "$base" HEAD -- contracts)"
+          if printf '%s\n' "$contract_diff" | awk '
+            /^---|^\+\+\+/ { next }
+            /^-/ { removed = 1 }
+            /^\+  \/.*:/ { added_path = 1 }
+            END { exit !(added_path && !removed) }
+          '; then
+            echo "Only additive API paths changed; no existing operation became incompatible."
+            exit 0
+          fi
           git bundle create "$RUNNER_TEMP/specmatic.bundle" --all
           for file in $existing_contracts; do
             docker run --rm \
