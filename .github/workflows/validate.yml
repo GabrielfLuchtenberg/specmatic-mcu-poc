@@ -45,12 +45,11 @@ jobs:
         with:
           fetch-depth: 0
       - name: Fail a breaking OpenAPI change
-        run: >-
-          docker run --rm
-          -v "$GITHUB_WORKSPACE:/workspace"
-          -v "$GITHUB_WORKSPACE/.git:/workspace/.git:ro"
-          -w /workspace
-          specmatic/specmatic
-          backward-compatibility-check
-          --base-branch ${{ github.event.pull_request.base.sha }}
-          --target-path contracts
+        run: |
+          git bundle create "$RUNNER_TEMP/specmatic.bundle" --all
+          docker run --rm \
+            -v "$GITHUB_WORKSPACE:/workspace:ro" \
+            -v "$RUNNER_TEMP/specmatic.bundle:/specmatic.bundle:ro" \
+            --entrypoint /bin/sh \
+            specmatic/specmatic \
+            -c "git clone /specmatic.bundle /repo >/dev/null && cd /repo && specmatic backward-compatibility-check --base-branch ${{ github.event.pull_request.base.sha }} --target-path contracts"
