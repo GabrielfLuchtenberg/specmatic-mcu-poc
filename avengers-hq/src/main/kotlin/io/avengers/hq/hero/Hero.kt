@@ -1,5 +1,8 @@
 package io.avengers.hq.hero
 
+import com.fasterxml.jackson.annotation.JsonInclude
+
+@JsonInclude(JsonInclude.Include.NON_NULL)
 data class Hero(
     val id: Long,
     val name: String,
@@ -7,6 +10,7 @@ data class Hero(
     val powerLevel: Int,
     val infinityStoneStatus: InfinityStoneStatus,
     val location: String? = null,
+    val team: String? = null,
 )
 
 enum class InfinityStoneStatus {

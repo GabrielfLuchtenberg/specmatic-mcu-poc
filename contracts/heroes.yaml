@@ -89,6 +89,9 @@ components:
         location:
           type: string
           description: Optional last-known location.
+        team:
+          type: string
+          description: Optional team or affiliation.
     InfinityStoneStatus:
       type: string
       enum: [SECURED, MISSING, COMPROMISED]
