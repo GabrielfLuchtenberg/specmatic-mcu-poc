@@ -27,8 +27,6 @@ paths:
               value: 1
             THOR_200_OK:
               value: 2
-            HULK_200_OK:
-              value: 5
             UNKNOWN_HERO_404:
               value: 666
       responses:
@@ -55,14 +53,6 @@ paths:
                     powerLevel: 99
                     infinityStoneStatus: SECURED
                     location: New Asgard
-                HULK_200_OK:
-                  value:
-                    id: 5
-                    name: Bruce Banner
-                    alias: Hulk
-                    powerLevel: 100
-                    infinityStoneStatus: SECURED
-                    location: Avengers Compound
         "404":
           description: Hero not found — perhaps dusted, or never assembled
           content:
