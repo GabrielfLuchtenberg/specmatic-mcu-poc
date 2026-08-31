@@ -44,6 +44,30 @@ jobs:
           CONTRACTS_DIR: ${{ runner.temp }}/generated-contracts
         run: ./scripts/test-against-mock.sh
 
+  sentinel-watch:
+    name: Node TypeScript service honours OpenAPI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: sentinel-watch/.nvmrc
+      - name: Install and test TypeScript service
+        working-directory: sentinel-watch
+        run: npm install && npm test
+      - name: Run Specmatic provider contract test
+        working-directory: sentinel-watch
+        run: |
+          npm start > /tmp/sentinel-watch.log 2>&1 &
+          for i in $(seq 1 30); do
+            if curl --fail --silent http://localhost:8090/health >/dev/null; then break; fi
+            sleep 1
+          done
+          docker run --rm --add-host=host.docker.internal:host-gateway \
+            -v "$GITHUB_WORKSPACE:/workspace" -w /workspace \
+            specmatic/specmatic test /workspace/contracts/sentinel-watch.yaml \
+            --testBaseURL=http://host.docker.internal:8090
+
   contract-compatibility:
     name: Contract remains backward compatible
     if: github.event_name == 'pull_request'

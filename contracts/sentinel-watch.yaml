@@ -1,0 +1,51 @@
+openapi: 3.0.3
+info:
+  title: Sentinel Watch
+  version: "1.0.0"
+servers:
+  - url: http://localhost:8090
+paths:
+  /alerts/{heroId}:
+    get:
+      operationId: getHeroAlert
+      parameters:
+        - name: heroId
+          in: path
+          required: true
+          schema: { type: integer, format: int64, minimum: 1 }
+          examples:
+            IRON_MAN_ALERT_200_OK: { value: 1 }
+            UNKNOWN_HERO_ALERT_404: { value: 666 }
+      responses:
+        "200":
+          description: Current alert
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Alert" }
+              examples:
+                IRON_MAN_ALERT_200_OK:
+                  value: { heroId: 1, severity: LOW, active: false }
+        "404":
+          description: Hero not found
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+              examples:
+                UNKNOWN_HERO_ALERT_404:
+                  value: { status: 404, message: Hero not found }
+components:
+  schemas:
+    Alert:
+      type: object
+      additionalProperties: false
+      required: [heroId, severity, active]
+      properties:
+        heroId: { type: integer, format: int64 }
+        severity: { type: string, enum: [LOW, HIGH, CRITICAL] }
+        active: { type: boolean }
+    Error:
+      type: object
+      required: [status, message]
+      properties:
+        status: { type: integer }
+        message: { type: string }
