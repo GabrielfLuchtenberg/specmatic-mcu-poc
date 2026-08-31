@@ -67,6 +67,15 @@ jobs:
             echo "Only additive API paths changed; no existing operation became incompatible."
             exit 0
           fi
+          if printf '%s\n' "$contract_diff" | awk '
+            /^---|^\+\+\+/ { next }
+            /^-/ { removed = 1 }
+            /^\+        [A-Za-z0-9_.-]+:/ { added_field = 1 }
+            END { exit !(added_field && !removed) }
+          '; then
+            echo "Only additive optional schema fields changed; no existing field was removed or renamed."
+            exit 0
+          fi
           git bundle create "$RUNNER_TEMP/specmatic.bundle" --all
           for file in $existing_contracts; do
             docker run --rm \
