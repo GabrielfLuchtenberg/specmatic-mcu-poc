@@ -9,7 +9,15 @@ class HeroRegistry {
         Hero(2, "Thor Odinson", "God of Thunder", 99, InfinityStoneStatus.SECURED, "New Asgard"),
         Hero(3, "Steve Rogers", "Captain America", 90, InfinityStoneStatus.SECURED, "Brooklyn"),
         Hero(4, "Natasha Romanoff", "Black Widow", 88, InfinityStoneStatus.MISSING, "Unknown"),
-        Hero(5, "Bruce Banner", "Hulk", 100, InfinityStoneStatus.SECURED, "Avengers Compound"),
+        Hero(
+            5,
+            "Bruce Banner",
+            "Hulk",
+            100,
+            InfinityStoneStatus.SECURED,
+            "Avengers Compound",
+            "Avengers",
+        ),
     ).associateBy { it.id }
 
     fun findById(id: Long): Hero? = heroes[id]
