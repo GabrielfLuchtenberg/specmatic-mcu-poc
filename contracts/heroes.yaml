@@ -65,6 +65,49 @@ paths:
                     status: 404
                     message: Hero not found
                     path: /heroes/666
+  /heroes/{id}/power-report:
+    get:
+      operationId: getHeroPowerReport
+      summary: Retrieve a derived power report for a hero
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          examples:
+            IRON_MAN_POWER_REPORT_200_OK:
+              value: 1
+            UNKNOWN_HERO_POWER_REPORT_404:
+              value: 666
+      responses:
+        "200":
+          description: Power report generated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PowerReport"
+              examples:
+                IRON_MAN_POWER_REPORT_200_OK:
+                  value:
+                    heroId: 1
+                    alias: Iron Man
+                    powerLevel: 95
+                    snapViable: true
+        "404":
+          description: Hero not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              examples:
+                UNKNOWN_HERO_POWER_REPORT_404:
+                  value:
+                    status: 404
+                    message: Hero not found
+                    path: /heroes/666/power-report
 components:
   schemas:
     Hero:
@@ -89,6 +132,15 @@ components:
         location:
           type: string
           description: Optional last-known location.
+    PowerReport:
+      type: object
+      additionalProperties: false
+      required: [heroId, alias, powerLevel, snapViable]
+      properties:
+        heroId: { type: integer, format: int64 }
+        alias: { type: string }
+        powerLevel: { type: integer, minimum: 0, maximum: 100 }
+        snapViable: { type: boolean }
     InfinityStoneStatus:
       type: string
       enum: [SECURED, MISSING, COMPROMISED]

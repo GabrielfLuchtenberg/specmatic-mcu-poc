@@ -13,6 +13,15 @@ pub struct Hero {
     pub location: Option<String>,
 }
 
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+pub struct PowerReport {
+    pub hero_id: u64,
+    pub alias: String,
+    pub power_level: i32,
+    pub snap_viable: bool,
+}
+
 #[derive(Debug, Error)]
 pub enum GauntletError {
     #[error("hero not found")]
@@ -46,6 +55,15 @@ impl AvengersClient {
 
         match response.status() {
             StatusCode::OK => Ok(response.json::<Hero>().await?),
+            StatusCode::NOT_FOUND => Err(GauntletError::NotFound),
+            other => Err(GauntletError::UnexpectedStatus(other)),
+        }
+    }
+
+    pub async fn get_power_report(&self, id: u64) -> Result<PowerReport, GauntletError> {
+        let response = self.http.get(format!("{}/heroes/{id}/power-report", self.base_url)).send().await?;
+        match response.status() {
+            StatusCode::OK => Ok(response.json::<PowerReport>().await?),
             StatusCode::NOT_FOUND => Err(GauntletError::NotFound),
             other => Err(GauntletError::UnexpectedStatus(other)),
         }

@@ -3,6 +3,7 @@ package io.avengers.hq.web
 import io.avengers.hq.hero.ApiError
 import io.avengers.hq.hero.Hero
 import io.avengers.hq.hero.HeroRegistry
+import io.avengers.hq.hero.PowerReport
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
@@ -25,5 +26,14 @@ class HeroController(
                 ),
             )
         return ResponseEntity.ok(hero)
+    }
+
+    @GetMapping("/heroes/{id}/power-report")
+    fun getPowerReport(@PathVariable id: Long): ResponseEntity<Any> {
+        val report: PowerReport = registry.powerReport(id)
+            ?: return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                ApiError(404, "Hero not found", ServletUriComponentsBuilder.fromCurrentRequest().build().path),
+            )
+        return ResponseEntity.ok(report)
     }
 }

@@ -20,3 +20,10 @@ data class ApiError(
     val message: String,
     val path: String? = null,
 )
+
+data class PowerReport(
+    val heroId: Long,
+    val alias: String,
+    val powerLevel: Int,
+    val snapViable: Boolean,
+)
