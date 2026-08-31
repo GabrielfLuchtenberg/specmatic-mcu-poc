@@ -5,6 +5,7 @@ set -euo pipefail
 
 APP_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_ROOT="$(cd "$APP_ROOT/.." && pwd)"
+CONTRACTS_DIR="${CONTRACTS_DIR:-$REPO_ROOT/contracts}"
 cd "$APP_ROOT"
 mkdir -p "$APP_ROOT/build"
 
@@ -25,10 +26,9 @@ for _ in $(seq 1 90); do
   if curl --fail --silent http://localhost:8080/actuator/health >/dev/null; then
     docker run --rm \
       --add-host=host.docker.internal:host-gateway \
-      -v "$REPO_ROOT:/workspace" \
-      -w /workspace \
+      -v "$CONTRACTS_DIR:/contracts:ro" \
       specmatic/specmatic \
-      test /workspace/contracts/heroes.yaml \
+      test /contracts/heroes.yaml \
       --testBaseURL=http://host.docker.internal:8080
     exit $?
   fi
