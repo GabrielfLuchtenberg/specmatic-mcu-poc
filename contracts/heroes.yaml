@@ -114,7 +114,7 @@ components:
       type: object
       additionalProperties: false
       required: [id, name, alias, powerLevel, infinityStoneStatus]
-              properties:
+      properties:
         id:
           type: integer
           format: int64
