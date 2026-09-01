@@ -1,12 +1,15 @@
-.PHONY: provider-test consumer-test consumer-contract-test verify
+.PHONY: provider-test consumer-test consumer-contract-test verify clean
 
 provider-test:
-	./avengers-hq/scripts/test-contract.sh
+	./scripts/compose-run.sh specmatic-provider-test
 
 consumer-test:
-	cargo test --manifest-path thanos-gauntlet/Cargo.toml
+	./scripts/compose-run.sh thanos-unit-test
 
 consumer-contract-test:
-	./thanos-gauntlet/scripts/test-against-mock.sh
+	./scripts/compose-run.sh thanos-contract-test
 
 verify: provider-test consumer-test consumer-contract-test
+
+clean:
+	docker compose down --volumes --remove-orphans

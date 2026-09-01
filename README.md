@@ -12,17 +12,18 @@ This is one repository with one executable OpenAPI contract and two applications
 
 OpenAPI describes the agreement: URL, path parameter, status codes, JSON fields, types, and allowed values. Specmatic turns that document into executable checks in two directions.
 
-1. **Provider contract testing.** `avengers-hq/scripts/test-contract.sh` starts the Spring Boot application on port 8080. The official Specmatic CLI image generates requests from `contracts/heroes.yaml`, sends them to the running application, and validates every response against the specified status code and schema. If Kotlin changes `powerLevel` to `strength` without a contract change, this job fails because the required JSON property is missing.
-2. **Consumer service virtualization.** Specmatic runs an HTTP mock from the *same* OpenAPI file on port 9000. The Rust client calls that mock in `tests/contract_client.rs`. Named OpenAPI examples connect the parameter example (`IRON_MAN_200_OK`, id `1`) with the response example, so the mock returns the expected Iron Man response. If Rust deserializes `strength` instead of `powerLevel`, the consumer test fails.
+1. **Provider contract testing.** Compose builds and health-checks the Spring Boot application, then the Specmatic container sends requests to `http://avengers-hq:8080` and validates every response. If Kotlin changes `powerLevel` to `strength` without a contract change, this job fails because the required JSON property is missing.
+2. **Consumer service virtualization.** Specmatic runs an HTTP mock from the *same* generated OpenAPI artifact. The containerized Rust contract tests call it at `http://specmatic-mock:9000`. Named OpenAPI examples connect the parameter example (`IRON_MAN_200_OK`, id `1`) with the response example, so the mock returns the expected Iron Man response.
 3. **Compatibility governance.** On every pull request, Specmatic compares `contracts/` with the PR base branch. Removing or renaming a required response field is a breaking change and fails the compatibility job before either application needs to be deployed.
 
-The contract is deliberately stored only at `contracts/heroes.yaml`. Neither application owns a copied version, so a pull request cannot accidentally update a provider spec while leaving the consumer’s mock stale.
+The source contract is deliberately stored only at `contracts/heroes.yaml`. `generate-contracts` materializes it once in `build/generated-contracts`, and the provider test and mock mount that same directory read-only. The generator remains replaceable through the stable `scripts/generate-contracts.sh <output-directory>` interface.
 
 ## Prerequisites
 
-- JDK 21
-- Rust stable
-- Docker (required for the consumer’s Specmatic mock and compatibility job)
+- Docker Engine with Docker Compose v2
+- Git and Make
+
+No host JDK, Gradle, Rust, Cargo, Node, Curl, or Specmatic installation is needed for validation.
 
 ## Run locally
 
@@ -35,15 +36,21 @@ make consumer-contract-test # Specmatic mock + Rust integration tests
 make verify                 # all three checks
 ```
 
-Equivalent commands are available without `make`:
+The shell wrappers call the same root `compose.yaml` services used by CI:
 
 ```bash
 ./avengers-hq/scripts/test-contract.sh
-cargo test --manifest-path thanos-gauntlet/Cargo.toml
+./scripts/compose-run.sh thanos-unit-test
 ./thanos-gauntlet/scripts/test-against-mock.sh
 ```
 
-To explore manually, start the mock with `./thanos-gauntlet/scripts/start-mock.sh`, then run the consumer with `AVENGERS_HQ_URL=http://localhost:9000 cargo run --manifest-path thanos-gauntlet/Cargo.toml`. It exposes `GET http://localhost:3000/targets/1`. To call the real provider instead, run `./avengers-hq/gradlew -p avengers-hq bootRun` and point the consumer at `http://localhost:8080`.
+`docker compose` uses internal service DNS rather than host networking. The validation services therefore do not publish ports and do not depend on `host.docker.internal`. To inspect a failure, run `docker compose logs avengers-hq specmatic-mock`; `make clean` removes containers, volumes, and orphans. CI assigns a unique Compose project name to each check.
+
+For native development only, you may run `cargo` or `./avengers-hq/gradlew` directly if those toolchains are installed. Those commands are conveniences, not the supported validation path.
+
+## Images and build cache
+
+All base and tool image versions are explicit in `.env` and passed to the multi-stage Dockerfiles. The provider uses a Gradle/JDK 21 builder and slim JRE runtime. The consumer Dockerfile exposes separate unit-test, contract-test, runtime, and build stages. Gradle and Cargo dependency layers are cached before application sources are copied. Update pinned versions in `.env`; do not replace them with `latest`, `stable`, or an unqualified Specmatic tag.
 
 ## The contract and its examples
 
@@ -55,9 +62,9 @@ The examples are executable fixtures, not prose. `IRON_MAN_200_OK` links request
 
 `.github/workflows/validate.yml` runs three independent required checks:
 
-1. **Provider honours OpenAPI** starts Spring Boot and runs Specmatic’s CLI contract test.
-2. **Consumer works against Specmatic mock** runs Rust unit tests, then boots the mock and runs the ignored integration tests explicitly.
-3. **Contract remains backward compatible** compares the PR contract with its base branch.
+1. **Provider honours OpenAPI** builds Spring Boot and runs Specmatic’s CLI contract test entirely in Compose.
+2. **Consumer works against Specmatic mock** runs containerized Rust unit tests, then health-gates the containerized contract tests on the mock.
+3. **Contract remains backward compatible** compares the PR contract with its base branch using the pinned Specmatic Compose service.
 
 After the repository is on GitHub, mark these three checks as required in the `main` branch protection rule. The workflow runs on every pull request and every push to `main`.
 

@@ -1,0 +1,22 @@
+# syntax=docker/dockerfile:1.7
+ARG RUST_IMAGE=rust:1.88.0-bookworm
+ARG GRADLE_IMAGE=gradle:8.14.3-jdk21-jammy
+
+FROM ${RUST_IMAGE} AS rust-toolchain
+
+FROM ${GRADLE_IMAGE} AS generator
+USER root
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
+COPY --from=rust-toolchain /usr/local/cargo /usr/local/cargo
+COPY --from=rust-toolchain /usr/local/rustup /usr/local/rustup
+ENV PATH=/usr/local/cargo/bin:${PATH} \
+    RUSTUP_HOME=/usr/local/rustup \
+    RUSTUP_TOOLCHAIN=1.88.0
+WORKDIR /workspace
+COPY . .
+RUN ./avengers-hq/gradlew -p ./avengers-hq dependencies --no-daemon \
+    && cargo fetch --locked --manifest-path ./thanos-gauntlet/Cargo.toml
+ENTRYPOINT ["./scripts/generate-contracts.sh"]
+CMD ["/generated-contracts"]
