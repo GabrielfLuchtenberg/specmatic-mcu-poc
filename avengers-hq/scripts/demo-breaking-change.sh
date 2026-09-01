@@ -4,6 +4,9 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 REPO_ROOT="$(cd "$ROOT/.." && pwd)"
 cd "$REPO_ROOT"
+set -a
+source "$REPO_ROOT/.env"
+set +a
 
 CONTRACT="$REPO_ROOT/contracts/heroes.yaml"
 BACKUP="$(mktemp)"
@@ -16,15 +19,11 @@ echo "    Specmatic backward-compatibility-check should FAIL (exit 1)."
 sed -i.bak 's/powerLevel/strength/g' "$CONTRACT"
 rm -f "$CONTRACT.bak"
 
-if command -v specmatic >/dev/null 2>&1; then
-  specmatic backward-compatibility-check --target-path contracts || true
-else
-  docker run --rm \
-    -v "$ROOT:/usr/src/app" \
-    -w /usr/src/app \
-    specmatic/specmatic \
-    backward-compatibility-check --target-path contracts || true
-fi
+docker run --rm \
+  -v "$ROOT:/usr/src/app" \
+  -w /usr/src/app \
+  "specmatic/specmatic:$SPECMATIC_VERSION" \
+  backward-compatibility-check --target-path contracts || true
 
 echo
 echo "==> Restoring the contract (trap on EXIT)."

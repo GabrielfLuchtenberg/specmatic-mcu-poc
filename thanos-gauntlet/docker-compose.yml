@@ -1,8 +1,0 @@
-services:
-  specmatic-mock:
-    image: specmatic/specmatic
-    command: ["mock", "/contracts/heroes.yaml", "--port", "9000"]
-    ports:
-      - "9000:9000"
-    volumes:
-      - ${CONTRACTS_DIR:-../contracts}:/contracts:ro

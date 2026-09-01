@@ -1,0 +1,94 @@
+name: specmatic-mcu-validation
+
+services:
+  generate-contracts:
+    build:
+      context: .
+      dockerfile: Dockerfile.contracts
+      target: generator
+      args:
+        GRADLE_IMAGE: ${GRADLE_IMAGE}
+        RUST_IMAGE: ${RUST_IMAGE}
+    working_dir: /workspace
+    command: ["/generated/generated-contracts"]
+    volumes:
+      - ./build:/generated
+
+  avengers-hq:
+    build:
+      context: ./avengers-hq
+      target: runtime
+      args:
+        GRADLE_IMAGE: ${GRADLE_IMAGE}
+        JRE_IMAGE: ${JRE_IMAGE}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health"]
+      interval: 2s
+      timeout: 2s
+      retries: 60
+      start_period: 10s
+
+  specmatic-provider-test:
+    image: specmatic/specmatic:${SPECMATIC_VERSION}
+    command:
+      - test
+      - /contracts/heroes.yaml
+      - --testBaseURL=http://avengers-hq:8080
+    depends_on:
+      generate-contracts:
+        condition: service_completed_successfully
+      avengers-hq:
+        condition: service_healthy
+    volumes:
+      - ./build/generated-contracts:/contracts:ro
+
+  specmatic-mock:
+    image: specmatic/specmatic:${SPECMATIC_VERSION}
+    command: ["mock", "/contracts/heroes.yaml", "--port", "9000"]
+    depends_on:
+      generate-contracts:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:9000/heroes/1 >/dev/null"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+    volumes:
+      - ./build/generated-contracts:/contracts:ro
+
+  thanos-unit-test:
+    build:
+      context: ./thanos-gauntlet
+      target: unit-test
+      args:
+        RUST_IMAGE: ${RUST_IMAGE}
+        DEBIAN_IMAGE: ${DEBIAN_IMAGE}
+
+  thanos-contract-test:
+    build:
+      context: ./thanos-gauntlet
+      target: contract-test
+      args:
+        RUST_IMAGE: ${RUST_IMAGE}
+        DEBIAN_IMAGE: ${DEBIAN_IMAGE}
+    depends_on:
+      specmatic-mock:
+        condition: service_healthy
+
+  contract-compatibility:
+    image: specmatic/specmatic:${SPECMATIC_VERSION}
+    profiles: ["compatibility"]
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        git clone /specmatic.bundle /repo >/dev/null &&
+        cd /repo &&
+        /usr/local/bin/specmatic-snapshots backward-compatibility-check
+        --base-branch "$${BASE_SHA}"
+        --target-path "$${CONTRACT_FILE}"
+    environment:
+      BASE_SHA: ${BASE_SHA:-HEAD^}
+      CONTRACT_FILE: ${CONTRACT_FILE:-contracts/heroes.yaml}
+    volumes:
+      - ${SPECMATIC_BUNDLE:-./build/specmatic.bundle}:/specmatic.bundle:ro

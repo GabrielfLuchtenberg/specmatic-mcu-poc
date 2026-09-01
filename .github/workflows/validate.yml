@@ -16,33 +16,24 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-      - name: Generate OpenAPI contracts
-        run: ./scripts/generate-contracts.sh "$RUNNER_TEMP/generated-contracts"
-      - name: Run Spring Boot and Specmatic provider tests
+      - name: Build provider and run Specmatic provider tests
         env:
-          CONTRACTS_DIR: ${{ runner.temp }}/generated-contracts
-        run: ./avengers-hq/scripts/test-contract.sh
+          COMPOSE_PROJECT_NAME: validate-provider-${{ github.run_id }}
+        run: ./scripts/compose-run.sh specmatic-provider-test
 
   consumer-contract:
     name: Consumer works against Specmatic mock
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - name: Generate OpenAPI contracts
-        run: ./scripts/generate-contracts.sh "$RUNNER_TEMP/generated-contracts"
-      - name: Run unit tests
-        working-directory: thanos-gauntlet
-        run: cargo test
-      - name: Run consumer integration tests against the OpenAPI mock
-        working-directory: thanos-gauntlet
+      - name: Run Rust unit tests in Docker
         env:
-          CONTRACTS_DIR: ${{ runner.temp }}/generated-contracts
-        run: ./scripts/test-against-mock.sh
+          COMPOSE_PROJECT_NAME: validate-consumer-${{ github.run_id }}
+        run: ./scripts/compose-run.sh thanos-unit-test
+      - name: Run consumer integration tests against the OpenAPI mock
+        env:
+          COMPOSE_PROJECT_NAME: validate-consumer-${{ github.run_id }}
+        run: ./scripts/compose-run.sh thanos-contract-test
 
   contract-compatibility:
     name: Contract remains backward compatible
@@ -92,10 +83,9 @@ jobs:
               echo "$file only changed formatting; its OpenAPI semantics are unchanged."
               continue
             fi
-            docker run --rm \
-              -v "$GITHUB_WORKSPACE:/workspace:ro" \
-              -v "$RUNNER_TEMP/specmatic.bundle:/specmatic.bundle:ro" \
-              --entrypoint /bin/sh \
-              specmatic/specmatic \
-              -c "git clone /specmatic.bundle /repo >/dev/null && cd /repo && specmatic backward-compatibility-check --base-branch ${{ github.event.pull_request.base.sha }} --target-path $file"
+            BASE_SHA="${{ github.event.pull_request.base.sha }}" \
+              CONTRACT_FILE="$file" \
+              SPECMATIC_BUNDLE="$RUNNER_TEMP/specmatic.bundle" \
+              COMPOSE_PROJECT_NAME="validate-compatibility-${{ github.run_id }}" \
+              docker compose --profile compatibility run --rm contract-compatibility
           done
